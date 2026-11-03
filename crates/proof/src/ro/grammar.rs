@@ -161,9 +161,31 @@ fn spaces(text: &str, v: &mut Vec<Issue>) {
         }
     }
     // The whole run, so the fix leaves one space.
-    for run in crate::space_runs(text) {
+    for run in space_runs(text) {
         v.push(issue(run.start, run.end, "Spațiu dublu".into(), vec![" ".into()]));
     }
+}
+
+/// Each run of two or more spaces in `text`, over the whole run (this craft-libs revision has no
+/// shared `space_runs`).
+fn space_runs(text: &str) -> Vec<std::ops::Range<usize>> {
+    let bytes = text.as_bytes();
+    let mut runs = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes.get(i) != Some(&b' ') {
+            i += 1;
+            continue;
+        }
+        let start = i;
+        while bytes.get(i) == Some(&b' ') {
+            i += 1;
+        }
+        if i - start >= 2 {
+            runs.push(start..i);
+        }
+    }
+    runs
 }
 
 fn sentence_capitals(text: &str, ws: &[(usize, usize)], capital_first: bool, v: &mut Vec<Issue>) {
